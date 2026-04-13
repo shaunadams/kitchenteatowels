@@ -160,6 +160,21 @@
       padding: 12px 16px; font-size: 0.85rem; margin-bottom: 24px; line-height: 1.5;
     }
 
+    /* UNSAVED CHANGES BANNER */
+    .unsaved-banner {
+      display: none; position: sticky; top: 64px; z-index: 40;
+      background: #1a4755; color: #fff;
+      padding: 10px 24px; font-size: 0.85rem; font-weight: 600;
+      align-items: center; justify-content: center; gap: 16px;
+      text-align: center;
+    }
+    .unsaved-banner.visible { display: flex; }
+    .unsaved-banner button {
+      background: var(--yellow); color: var(--text); border: 2px solid var(--text);
+      border-radius: 8px; padding: 6px 14px; font-family: inherit;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer;
+    }
+
     @media (max-width: 600px) {
       .product-row { flex-wrap: wrap; }
       .product-row-actions { width: 100%; justify-content: flex-end; }
@@ -196,11 +211,15 @@
     </div>
   </div>
 
+  <div class="unsaved-banner" id="unsaved-banner">
+    ⚠ You have unsaved changes — click Save &amp; Download, then upload products.js to GitHub.
+    <button onclick="publishProducts()">Save &amp; Download products.js</button>
+  </div>
+
   <div class="admin-main">
 
     <div class="notice">
-      <strong>How changes work:</strong> Toggle, edit, or add products below and click <strong>Save &amp; Download products.js</strong>.
-      Then upload the downloaded <code>products.js</code> file to GitHub — your live site will update automatically.
+      <strong>How changes work:</strong> Toggle, edit, or add products below. An orange bar will appear at the top when you have unsaved changes — click <strong>Save &amp; Download products.js</strong>, then upload that file to GitHub to make changes live.
     </div>
 
     <div class="toolbar">
@@ -374,19 +393,19 @@
   function toggleActive(checkbox) {
     var i = parseInt(checkbox.getAttribute('data-idx'));
     products[i].active = checkbox.checked;
-    saveToLocalStorage();
+    markDirty();
     renderList();
   }
 
   function deleteProduct(i) {
     if (!confirm('Delete "' + products[i].name + '"? This cannot be undone.')) return;
     products.splice(i, 1);
-    saveToLocalStorage();
+    markDirty();
     renderList();
   }
 
-  function saveToLocalStorage() {
-    localStorage.setItem('ktt_products', JSON.stringify(products));
+  function markDirty() {
+    document.getElementById('unsaved-banner').classList.add('visible');
   }
 
   // ── MODAL ──
@@ -477,7 +496,7 @@
       products.push(product);
     }
 
-    saveToLocalStorage();
+    markDirty();
     renderList();
     closeModal();
   }
@@ -495,6 +514,9 @@
     a.download = 'products.js';
     a.click();
     URL.revokeObjectURL(a.href);
+    // Persist to localStorage so the admin reloads correctly next visit
+    localStorage.setItem('ktt_products', JSON.stringify(products));
+    document.getElementById('unsaved-banner').classList.remove('visible');
   }
 
   // ── HELPERS ──
