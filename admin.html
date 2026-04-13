@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Kitchen Tea Towels</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="products.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #fce477;
+      --yellow-dark: #f5d230;
+      --gray-light: #f5f5f5;
+      --gray-mid: #e0e0e0;
+      --gray-text: #555;
+      --text: #1a1a1a;
+      --red: #e53e3e;
+      --green: #38a169;
+      --radius: 10px;
+    }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: #f9f9f9; min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-box {
+      background: #fff; border: 1px solid var(--gray-mid); border-radius: var(--radius);
+      padding: 40px; width: 100%; max-width: 400px; text-align: center;
+    }
+    .login-box img { height: 44px; width: auto; margin-bottom: 24px; }
+    .login-box h1 { font-size: 1.3rem; margin-bottom: 8px; }
+    .login-box p { font-size: 0.875rem; color: var(--gray-text); margin-bottom: 24px; }
+    .login-box input[type="password"] {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--gray-mid);
+      border-radius: 8px; font-family: inherit; font-size: 0.9rem; margin-bottom: 12px;
+    }
+    .login-box .error { color: var(--red); font-size: 0.8rem; margin-bottom: 12px; display: none; }
+
+    /* ADMIN PANEL */
+    #admin-panel { display: none; }
+
+    /* HEADER */
+    .admin-header {
+      background: #fff; border-bottom: 1px solid var(--gray-mid);
+      padding: 0 24px; position: sticky; top: 0; z-index: 50;
+    }
+    .admin-header-inner {
+      max-width: 1100px; margin: 0 auto; height: 64px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .admin-header img { height: 36px; width: auto; }
+    .admin-header-title { font-weight: 700; font-size: 0.95rem; color: var(--gray-text); }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* MAIN */
+    .admin-main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+    }
+    .toolbar h2 { font-size: 1.25rem; font-weight: 700; }
+    .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* PRODUCT LIST */
+    .product-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .product-row {
+      background: #fff; border: 1px solid var(--gray-mid); border-radius: var(--radius);
+      display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+      transition: opacity 0.2s;
+    }
+    .product-row.inactive { opacity: 0.5; }
+
+    .product-row-img {
+      width: 60px; height: 60px; object-fit: cover;
+      border-radius: 6px; flex-shrink: 0; background: var(--gray-light);
+    }
+
+    .product-row-info { flex: 1; min-width: 0; }
+    .product-row-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-row-meta { font-size: 0.8rem; color: var(--gray-text); margin-top: 2px; }
+
+    .product-row-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    /* TOGGLE */
+    .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle input { display: none; }
+    .slider {
+      position: absolute; inset: 0; background: var(--gray-mid);
+      border-radius: 999px; cursor: pointer; transition: background 0.2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle input:checked + .slider { background: var(--green); }
+    .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+    /* BUTTONS */
+    .btn {
+      padding: 8px 16px; border-radius: 8px; font-family: inherit;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none;
+      transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--yellow); color: var(--text); border: 2px solid var(--text); }
+    .btn-secondary { background: var(--gray-light); color: var(--text); border: 2px solid var(--gray-mid); }
+    .btn-danger { background: #fff; color: var(--red); border: 2px solid var(--red); }
+    .btn-publish { background: #1a1a1a; color: #fff; border: 2px solid #1a1a1a; padding: 8px 20px; }
+    .btn-logout  { background: transparent; color: var(--gray-text); border: 1px solid var(--gray-mid); font-size: 0.8rem; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff; border-radius: var(--radius); width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto; padding: 32px;
+    }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--gray-mid);
+      border-radius: 8px; font-family: inherit; font-size: 0.875rem;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group .hint { font-size: 0.75rem; color: var(--gray-text); margin-top: 4px; }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+
+    /* VARIANTS */
+    .variant-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .variant-row { display: flex; gap: 8px; align-items: center; }
+    .variant-row input { flex: 1; }
+    .btn-remove-variant { background: none; border: none; color: var(--red); cursor: pointer; font-size: 1.1rem; padding: 4px; }
+
+    /* CHANGE PASSWORD */
+    .change-pw-section {
+      background: var(--gray-light); border-radius: var(--radius);
+      padding: 20px; margin-top: 40px;
+    }
+    .change-pw-section h3 { font-size: 1rem; margin-bottom: 16px; }
+    .change-pw-section .pw-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .change-pw-section input { flex: 1; min-width: 180px; padding: 9px 12px; border: 1px solid var(--gray-mid); border-radius: 8px; font-family: inherit; font-size: 0.875rem; }
+    .change-pw-section .msg { font-size: 0.8rem; margin-top: 8px; }
+
+    /* NOTICE */
+    .notice {
+      background: #fffbeb; border: 1px solid #f6d860; border-radius: 8px;
+      padding: 12px 16px; font-size: 0.85rem; margin-bottom: 24px; line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .product-row { flex-wrap: wrap; }
+      .product-row-actions { width: 100%; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <img src="images/kitchen-tea-towels-logo.webp" alt="Kitchen Tea Towels" />
+    <h1 id="login-title">Admin Sign In</h1>
+    <p id="login-subtitle">Enter your admin password to continue.</p>
+    <p class="error" id="login-error">Incorrect password. Please try again.</p>
+    <input type="password" id="password-input" placeholder="Password" />
+    <button class="btn btn-primary" style="width:100%" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+
+  <div class="admin-header">
+    <div class="admin-header-inner">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img src="images/kitchen-tea-towels-logo.webp" alt="Kitchen Tea Towels" />
+        <span class="admin-header-title">Product Admin</span>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" target="_blank" class="btn btn-secondary">View Shop</a>
+        <button class="btn btn-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-main">
+
+    <div class="notice">
+      <strong>How changes work:</strong> Toggle, edit, or add products below and click <strong>Save &amp; Download products.js</strong>.
+      Then upload the downloaded <code>products.js</code> file to GitHub — your live site will update automatically.
+    </div>
+
+    <div class="toolbar">
+      <h2>Products (<span id="product-count">0</span>)</h2>
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Product</button>
+        <button class="btn btn-publish" onclick="publishProducts()">Save &amp; Download products.js</button>
+      </div>
+    </div>
+
+    <div class="product-list" id="product-list"></div>
+
+    <div class="change-pw-section">
+      <h3>Change Admin Password</h3>
+      <div class="pw-row">
+        <input type="password" id="new-pw" placeholder="New password" />
+        <input type="password" id="new-pw-confirm" placeholder="Confirm password" />
+        <button class="btn btn-secondary" onclick="changePassword()">Update Password</button>
+      </div>
+      <p class="msg" id="pw-msg"></p>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT / ADD MODAL -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <h2 id="modal-title">Edit Product</h2>
+
+    <input type="hidden" id="modal-product-id" />
+
+    <div class="form-group">
+      <label>Product Name</label>
+      <input type="text" id="modal-name" placeholder="e.g. Seaside Tea Towel" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="modal-desc" placeholder="Short product description..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Price (£)</label>
+      <input type="number" id="modal-price" placeholder="14.00" min="0" step="0.01" />
+    </div>
+    <div class="form-group">
+      <label>Main Image URL</label>
+      <input type="url" id="modal-image" placeholder="https://..." />
+      <p class="hint">Paste the full URL of the product image.</p>
+    </div>
+    <div class="form-group">
+      <label>Active</label>
+      <select id="modal-active">
+        <option value="true">Yes — show on shop</option>
+        <option value="false">No — hide from shop</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Colour Variants <span style="font-weight:400;color:var(--gray-text)">(optional — leave empty if only one version)</span></label>
+      <div class="variant-list" id="variant-list"></div>
+      <button type="button" class="btn btn-secondary" style="margin-top:8px;font-size:0.8rem;" onclick="addVariantRow()">+ Add Variant</button>
+      <p class="hint">Each variant needs a name (e.g. Blue) and its own image URL.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── PRODUCTS STATE ──
+  var products = [];
+
+  // ── PASSWORD / AUTH ──
+  async function sha256(str) {
+    var buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  async function handleLogin() {
+    var pw   = document.getElementById('password-input').value;
+    var hash = await sha256(pw);
+    var stored = localStorage.getItem('ktt_admin_hash');
+
+    if (!stored) {
+      // First time — set password
+      if (pw.length < 6) {
+        showLoginError('Password must be at least 6 characters.');
+        return;
+      }
+      localStorage.setItem('ktt_admin_hash', hash);
+      enterAdmin();
+    } else {
+      if (hash === stored) {
+        sessionStorage.setItem('ktt_admin_session', '1');
+        enterAdmin();
+      } else {
+        showLoginError('Incorrect password. Please try again.');
+      }
+    }
+  }
+
+  function showLoginError(msg) {
+    var el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  document.getElementById('password-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
+
+  async function changePassword() {
+    var np  = document.getElementById('new-pw').value;
+    var nc  = document.getElementById('new-pw-confirm').value;
+    var msg = document.getElementById('pw-msg');
+    if (np.length < 6) { msg.style.color='red'; msg.textContent='Password must be at least 6 characters.'; return; }
+    if (np !== nc)      { msg.style.color='red'; msg.textContent='Passwords do not match.'; return; }
+    localStorage.setItem('ktt_admin_hash', await sha256(np));
+    msg.style.color='green'; msg.textContent='Password updated.';
+    document.getElementById('new-pw').value='';
+    document.getElementById('new-pw-confirm').value='';
+  }
+
+  function logout() {
+    sessionStorage.removeItem('ktt_admin_session');
+    location.reload();
+  }
+
+  // ── ENTER ADMIN ──
+  function enterAdmin() {
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('admin-panel').style.display   = 'block';
+
+    // Load products: localStorage override first, then products.js
+    var stored = localStorage.getItem('ktt_products');
+    products = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(window.KTT_PRODUCTS));
+    renderList();
+  }
+
+  // ── RENDER PRODUCT LIST ──
+  function renderList() {
+    document.getElementById('product-count').textContent = products.length;
+    var list = document.getElementById('product-list');
+    list.innerHTML = '';
+    products.forEach(function(p, i) {
+      var row = document.createElement('div');
+      row.className = 'product-row' + (p.active ? '' : ' inactive');
+      row.innerHTML =
+        '<img class="product-row-img" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" />' +
+        '<div class="product-row-info">' +
+          '<div class="product-row-name">' + esc(p.name) + '</div>' +
+          '<div class="product-row-meta">£' + esc(p.price) +
+            (p.variants && p.variants.length > 1 ? ' · ' + p.variants.length + ' variants' : '') +
+            (p.active ? '' : ' · <span style="color:var(--red)">Hidden</span>') +
+          '</div>' +
+        '</div>' +
+        '<div class="product-row-actions">' +
+          '<label class="toggle" title="' + (p.active ? 'Hide product' : 'Show product') + '">' +
+            '<input type="checkbox" ' + (p.active ? 'checked' : '') + ' data-idx="' + i + '" onchange="toggleActive(this)" />' +
+            '<span class="slider"></span>' +
+          '</label>' +
+          '<button class="btn btn-secondary" onclick="openEditModal(' + i + ')">Edit</button>' +
+          '<button class="btn btn-danger" onclick="deleteProduct(' + i + ')">Delete</button>' +
+        '</div>';
+      list.appendChild(row);
+    });
+  }
+
+  function toggleActive(checkbox) {
+    var i = parseInt(checkbox.getAttribute('data-idx'));
+    products[i].active = checkbox.checked;
+    saveToLocalStorage();
+    renderList();
+  }
+
+  function deleteProduct(i) {
+    if (!confirm('Delete "' + products[i].name + '"? This cannot be undone.')) return;
+    products.splice(i, 1);
+    saveToLocalStorage();
+    renderList();
+  }
+
+  function saveToLocalStorage() {
+    localStorage.setItem('ktt_products', JSON.stringify(products));
+  }
+
+  // ── MODAL ──
+  function openAddModal() {
+    document.getElementById('modal-title').textContent = 'Add Product';
+    document.getElementById('modal-product-id').value = '';
+    document.getElementById('modal-name').value   = '';
+    document.getElementById('modal-desc').value   = '';
+    document.getElementById('modal-price').value  = '';
+    document.getElementById('modal-image').value  = '';
+    document.getElementById('modal-active').value = 'true';
+    document.getElementById('variant-list').innerHTML = '';
+    document.getElementById('product-modal').classList.add('active');
+  }
+
+  function openEditModal(i) {
+    var p = products[i];
+    document.getElementById('modal-title').textContent     = 'Edit Product';
+    document.getElementById('modal-product-id').value      = i;
+    document.getElementById('modal-name').value            = p.name;
+    document.getElementById('modal-desc').value            = p.desc;
+    document.getElementById('modal-price').value           = p.price;
+    document.getElementById('modal-image').value           = p.image;
+    document.getElementById('modal-active').value          = p.active ? 'true' : 'false';
+
+    var vl = document.getElementById('variant-list');
+    vl.innerHTML = '';
+    if (p.variants) {
+      p.variants.forEach(function(v) { addVariantRow(v.name, v.image); });
+    }
+    document.getElementById('product-modal').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('product-modal').classList.remove('active');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('product-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  function addVariantRow(name, image) {
+    var vl  = document.getElementById('variant-list');
+    var row = document.createElement('div');
+    row.className = 'variant-row';
+    row.innerHTML =
+      '<input type="text"  placeholder="Name (e.g. Blue)"  value="' + esc(name  || '') + '" class="v-name" />' +
+      '<input type="url"   placeholder="Image URL"          value="' + esc(image || '') + '" class="v-img"  />' +
+      '<button type="button" class="btn-remove-variant" onclick="this.parentNode.remove()">&#x2715;</button>';
+    vl.appendChild(row);
+  }
+
+  function saveProduct() {
+    var name  = document.getElementById('modal-name').value.trim();
+    var desc  = document.getElementById('modal-desc').value.trim();
+    var price = document.getElementById('modal-price').value.trim();
+    var image = document.getElementById('modal-image').value.trim();
+    var active = document.getElementById('modal-active').value === 'true';
+    var idxStr = document.getElementById('modal-product-id').value;
+
+    if (!name || !price || !image) {
+      alert('Please fill in Name, Price, and Image URL.');
+      return;
+    }
+
+    // Collect variants
+    var variants = [];
+    document.querySelectorAll('#variant-list .variant-row').forEach(function(row) {
+      var vname = row.querySelector('.v-name').value.trim();
+      var vimg  = row.querySelector('.v-img').value.trim();
+      if (vname && vimg) variants.push({ name: vname, image: vimg });
+    });
+
+    var product = {
+      id: idxStr !== '' ? products[parseInt(idxStr)].id : slugify(name),
+      name:     name,
+      desc:     desc,
+      price:    parseFloat(price).toFixed(2),
+      active:   active,
+      image:    image,
+      variants: variants
+    };
+
+    if (idxStr !== '') {
+      products[parseInt(idxStr)] = product;
+    } else {
+      products.push(product);
+    }
+
+    saveToLocalStorage();
+    renderList();
+    closeModal();
+  }
+
+  function slugify(str) {
+    return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') + '-' + Date.now();
+  }
+
+  // ── PUBLISH ──
+  function publishProducts() {
+    var content = 'window.KTT_PRODUCTS = ' + JSON.stringify(products, null, 2) + ';\n';
+    var blob = new Blob([content], { type: 'text/javascript' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'products.js';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ── HELPERS ──
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+      .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── INIT ──
+  // Check for existing session or first-time setup
+  (function init() {
+    var hasHash    = !!localStorage.getItem('ktt_admin_hash');
+    var hasSession = !!sessionStorage.getItem('ktt_admin_session');
+
+    if (!hasHash) {
+      document.getElementById('login-title').textContent    = 'Set Admin Password';
+      document.getElementById('login-subtitle').textContent = 'First time setup — choose a password (min. 6 characters).';
+    }
+
+    if (hasSession) {
+      enterAdmin();
+    }
+  })();
+</script>
+</body>
+</html>
